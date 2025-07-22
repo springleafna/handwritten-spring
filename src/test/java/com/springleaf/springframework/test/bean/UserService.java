@@ -1,6 +1,9 @@
 package com.springleaf.springframework.test.bean;
 
-public class UserService {
+import com.springleaf.springframework.beans.factory.DisposableBean;
+import com.springleaf.springframework.beans.factory.InitializingBean;
+
+public class UserService implements DisposableBean, InitializingBean {
 
     private String uId;
     private String company;
@@ -8,7 +11,17 @@ public class UserService {
     private UserDao userDao;
 
     public String queryUserInfo() {
-        return userDao.queryUserName(uId) + "," + company + "," + location;
+        return "userName:" + userDao.queryUserName(uId) + ",company:" + company + ",location:" + location;
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        System.out.println("执行：UserService.destroy");
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        System.out.println("执行：UserService.afterPropertiesSet");
     }
 
     public String getuId() {

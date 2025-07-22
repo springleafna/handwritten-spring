@@ -10,7 +10,14 @@ public class BeanDefinition {
     // 要实例化的类的 Class 对象（比如 UserService.class）
     private Class beanClass;
 
+    // 一个或多个<property name="xxx" value="yyy"/>
     private PropertyValues propertyValues;
+
+    // init-method="initDataMethod"
+    private String initMethodName;
+
+    // destroy-method="destroyDataMethod"
+    private String destroyMethodName;
 
     public BeanDefinition(Class beanClass) {
         this.beanClass = beanClass;
@@ -36,5 +43,21 @@ public class BeanDefinition {
 
     public void setPropertyValues(PropertyValues propertyValues) {
         this.propertyValues = propertyValues;
+    }
+
+    public String getInitMethodName() {
+        return initMethodName;
+    }
+
+    public void setInitMethodName(String initMethodName) {
+        this.initMethodName = initMethodName;
+    }
+
+    public String getDestroyMethodName() {
+        return destroyMethodName;
+    }
+
+    public void setDestroyMethodName(String destroyMethodName) {
+        this.destroyMethodName = destroyMethodName;
     }
 }
