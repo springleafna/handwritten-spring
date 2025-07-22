@@ -3,6 +3,9 @@ package com.springleaf.springframework.beans;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 封装一组待注入的属性值（如 XML 配置中的 <property name="xxx" value="yyy"/>），是多个 PropertyValue 的容器。
+ */
 public class PropertyValues {
 
     private final List<PropertyValue> propertyValueList = new ArrayList<>();

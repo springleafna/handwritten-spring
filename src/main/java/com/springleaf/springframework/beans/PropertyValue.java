@@ -1,7 +1,7 @@
 package com.springleaf.springframework.beans;
 
 /**
- * bean 属性信息
+ * 封装一个bean的某个属性值（如 XML 配置中的 <property name="xxx" value="yyy"/>）
  */
 public class PropertyValue {
 
