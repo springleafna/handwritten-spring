@@ -50,6 +50,13 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
         loadBeanDefinitions(resource);
     }
 
+    @Override
+    public void loadBeanDefinitions(String... locations) throws BeansException {
+        for (String location : locations) {
+            loadBeanDefinitions(location);
+        }
+    }
+
     /**
      * 从输入流中读取 XML 配置文件，解析 <bean> 标签，并注册 BeanDefinition
      * @param inputStream XML 文件的输入流。

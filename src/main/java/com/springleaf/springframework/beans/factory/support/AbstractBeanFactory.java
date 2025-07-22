@@ -1,10 +1,16 @@
 package com.springleaf.springframework.beans.factory.support;
 
 import com.springleaf.springframework.beans.BeansException;
-import com.springleaf.springframework.beans.factory.BeanFactory;
 import com.springleaf.springframework.beans.factory.config.BeanDefinition;
+import com.springleaf.springframework.beans.factory.config.BeanPostProcessor;
+import com.springleaf.springframework.beans.factory.config.ConfigurableBeanFactory;
 
-public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements BeanFactory {
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements ConfigurableBeanFactory {
+
+    private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<BeanPostProcessor>();
 
     @Override
     public Object getBean(String name) throws BeansException {
@@ -35,4 +41,16 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
 
     protected abstract Object createBean(String beanName, BeanDefinition beanDefinition, Object[] args) throws BeansException;
 
+    @Override
+    public void addBeanPostProcessor(BeanPostProcessor beanPostProcessor){
+        this.beanPostProcessors.remove(beanPostProcessor);
+        this.beanPostProcessors.add(beanPostProcessor);
+    }
+
+    /**
+     * 返回将应用于使用此工厂创建的 BeanPostProcessors 的列表
+     */
+    public List<BeanPostProcessor> getBeanPostProcessors() {
+        return this.beanPostProcessors;
+    }
 }
