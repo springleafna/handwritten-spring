@@ -1,54 +1,22 @@
 package com.springleaf.springframework.test.bean;
 
-import com.springleaf.springframework.beans.BeansException;
-import com.springleaf.springframework.beans.factory.BeanClassLoaderAware;
-import com.springleaf.springframework.beans.factory.BeanFactory;
-import com.springleaf.springframework.beans.factory.BeanFactoryAware;
-import com.springleaf.springframework.beans.factory.BeanNameAware;
-import com.springleaf.springframework.context.ApplicationContext;
-import com.springleaf.springframework.context.ApplicationContextAware;
+public class UserService {
 
-public class UserService implements BeanNameAware, BeanClassLoaderAware, ApplicationContextAware, BeanFactoryAware {
-
-    private ApplicationContext applicationContext;
-    private BeanFactory beanFactory;
-
-    private String uId;
+    private String userId;
     private String company;
     private String location;
-    private UserDao userDao;
+    private IUserDao userDao;
 
     public String queryUserInfo() {
-        return "userName:" + userDao.queryUserName(uId) + ",company:" + company + ",location:" + location;
+        return "userName:" + userDao.queryUserName(userId) + ",company:" + company + ",location:" + location;
     }
 
-    @Override
-    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-        this.beanFactory = beanFactory;
+    public String getUserId() {
+        return userId;
     }
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
-
-    @Override
-    public void setBeanName(String name) {
-        System.out.println("Bean Name is：" + name);
-    }
-
-    @Override
-    public void setBeanClassLoader(ClassLoader classLoader) {
-        System.out.println("ClassLoader：" + classLoader);
-    }
-
-
-    public String getuId() {
-        return uId;
-    }
-
-    public void setuId(String uId) {
-        this.uId = uId;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getCompany() {
@@ -67,19 +35,12 @@ public class UserService implements BeanNameAware, BeanClassLoaderAware, Applica
         this.location = location;
     }
 
-    public UserDao getUserDao() {
+    public IUserDao getUserDao() {
         return userDao;
     }
 
-    public void setUserDao(UserDao userDao) {
+    public void setUserDao(IUserDao userDao) {
         this.userDao = userDao;
     }
 
-    public ApplicationContext getApplicationContext() {
-        return applicationContext;
-    }
-
-    public BeanFactory getBeanFactory() {
-        return beanFactory;
-    }
 }

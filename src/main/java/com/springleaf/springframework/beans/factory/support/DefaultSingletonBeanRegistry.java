@@ -11,6 +11,16 @@ import java.util.Set;
 
 public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
 
+    /**
+     * 用来判断是否为空对象的标记
+     */
+    protected static final Object NULL_OBJECT = new Object();
+
+    /**
+     * 保存单例Bean的容器
+     * key：beanName
+     * value：单例对象
+     */
     private Map<String, Object> singletonObjects = new HashMap<>();
 
     /**
