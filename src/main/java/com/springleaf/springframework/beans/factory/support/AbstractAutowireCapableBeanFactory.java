@@ -43,7 +43,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         // 判断 SCOPE_SINGLETON、SCOPE_PROTOTYPE
         if (beanDefinition.isSingleton()) {
             // 5. 将创建好的单例 Bean 添加到单例池
-            addSingleton(beanName, bean);
+            registerSingleton(beanName, bean);
         }
         // 6. 返回最终的 Bean
         return bean;

@@ -4,10 +4,10 @@ import com.springleaf.springframework.beans.BeansException;
 import com.springleaf.springframework.beans.factory.DisposableBean;
 import com.springleaf.springframework.beans.factory.config.SingletonBeanRegistry;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
 
@@ -21,7 +21,7 @@ public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
      * key：beanName
      * value：单例对象
      */
-    private Map<String, Object> singletonObjects = new HashMap<>();
+    private Map<String, Object> singletonObjects = new ConcurrentHashMap<>();
 
     /**
      * 为了在容器关闭时，能够自动调用 Bean 的销毁方法（如释放数据库连接、关闭线程池等），防止资源泄漏。
@@ -36,7 +36,7 @@ public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
         return singletonObjects.get(beanName);
     }
 
-    protected void addSingleton(String beanName, Object singletonObject) {
+    public void registerSingleton(String beanName, Object singletonObject) {
         singletonObjects.put(beanName, singletonObject);
     }
 

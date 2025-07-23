@@ -4,12 +4,23 @@ import com.springleaf.springframework.beans.BeansException;
 import com.springleaf.springframework.beans.factory.ConfigurableListableBeanFactory;
 import com.springleaf.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import com.springleaf.springframework.beans.factory.config.BeanPostProcessor;
+import com.springleaf.springframework.context.ApplicationEvent;
+import com.springleaf.springframework.context.ApplicationListener;
 import com.springleaf.springframework.context.ConfigurableApplicationContext;
+import com.springleaf.springframework.context.event.ApplicationEventMulticaster;
+import com.springleaf.springframework.context.event.ContextClosedEvent;
+import com.springleaf.springframework.context.event.ContextRefreshedEvent;
+import com.springleaf.springframework.context.event.SimpleApplicationEventMulticaster;
 import com.springleaf.springframework.core.io.DefaultResourceLoader;
 
+import java.util.Collection;
 import java.util.Map;
 
 public abstract class AbstractApplicationContext extends DefaultResourceLoader implements ConfigurableApplicationContext {
+
+    public static final String APPLICATION_EVENT_MULTICASTER_BEAN_NAME = "applicationEventMulticaster";
+
+    private ApplicationEventMulticaster applicationEventMulticaster;
 
     @Override
     public void refresh() throws BeansException {
@@ -28,8 +39,21 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         // 5. BeanPostProcessor 需要提前于其他 Bean 对象实例化之前执行注册操作
         registerBeanPostProcessors(beanFactory);
 
-        // 6. 提前实例化单例Bean对象
+        // 6. 初始化事件发布者
+        // 即实例化SimpleApplicationEventMulticaster，这样上下文就具备了SimpleApplicationEventMulticaster中定义的事件发布功能，
+        // 并将实例化Bean对象applicationEventMulticaster 存入单例Bean对象容器singletonObjects，以供其他方法使用
+        initApplicationEventMulticaster();
+
+        // 7. 注册事件监听器
+        // 获取所有实现了ApplicationListener接口的监听器类对象，例如CustomEventListener，
+        // 调用applicationEventMulticaster.addApplicationListener(listener)将监听器Bean对象存入监听器池子中
+        registerListeners();
+
+        // 8. 提前实例化单例Bean对象
         beanFactory.preInstantiateSingletons();
+
+        // 9. 发布【容器刷新完成】事件
+        finishRefresh();
     }
 
     protected abstract void refreshBeanFactory() throws BeansException;
@@ -49,6 +73,29 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
             beanFactory.addBeanPostProcessor(beanPostProcessor);
         }
     }
+
+    private void initApplicationEventMulticaster() {
+        ConfigurableListableBeanFactory beanFactory = getBeanFactory();
+        applicationEventMulticaster = new SimpleApplicationEventMulticaster(beanFactory);
+        beanFactory.registerSingleton(APPLICATION_EVENT_MULTICASTER_BEAN_NAME, applicationEventMulticaster);
+    }
+
+    private void registerListeners() {
+        Collection<ApplicationListener> applicationListeners = getBeansOfType(ApplicationListener.class).values();
+        for (ApplicationListener listener : applicationListeners) {
+            applicationEventMulticaster.addApplicationListener(listener);
+        }
+    }
+
+    private void finishRefresh() {
+        publishEvent(new ContextRefreshedEvent(this));
+    }
+
+    @Override
+    public void publishEvent(ApplicationEvent event) {
+        applicationEventMulticaster.multicastEvent(event);
+    }
+
 
     @Override
     public <T> Map<String, T> getBeansOfType(Class<T> type) throws BeansException {
@@ -97,6 +144,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
 
     @Override
     public void close() {
+        // 发布容器关闭事件
+        publishEvent(new ContextClosedEvent(this));
+
         /*
           获取底层的 Bean 工厂（通常是 DefaultListableBeanFactory）
           调用其 destroySingletons() 方法 → 销毁所有注册过的可销毁 Bean
