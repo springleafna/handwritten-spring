@@ -122,6 +122,11 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         return getBeanFactory().getBean(name, requiredType);
     }
 
+    @Override
+    public <T> T getBean(Class<T> requiredType) throws BeansException {
+        return getBeanFactory().getBean(requiredType);
+    }
+
     /**
      * 注册钩子方法，关闭容器
      * Shutdown Hook：是 JVM 提供的一种机制：在 JVM 正常关闭前（如 Ctrl+C、System.exit），自动执行一段代码。
