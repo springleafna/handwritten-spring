@@ -14,7 +14,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
     private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
 
-    private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<BeanPostProcessor>();
+    private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
 
     @Override
     public Object getBean(String name) throws BeansException {

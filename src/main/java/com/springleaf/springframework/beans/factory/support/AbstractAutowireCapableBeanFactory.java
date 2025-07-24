@@ -6,10 +6,7 @@ import com.springleaf.springframework.beans.BeansException;
 import com.springleaf.springframework.beans.PropertyValue;
 import com.springleaf.springframework.beans.PropertyValues;
 import com.springleaf.springframework.beans.factory.*;
-import com.springleaf.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import com.springleaf.springframework.beans.factory.config.BeanDefinition;
-import com.springleaf.springframework.beans.factory.config.BeanPostProcessor;
-import com.springleaf.springframework.beans.factory.config.BeanReference;
+import com.springleaf.springframework.beans.factory.config.*;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -25,28 +22,51 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     protected Object createBean(String beanName, BeanDefinition beanDefinition, Object[] args) throws BeansException {
         Object bean = null;
         try {
-            // 1. 实例化：通过构造函数创建对象
+            // 1. 判断是否返回代理 Bean 对象
+            bean = resolveBeforeInstantiation(beanName, beanDefinition);
+            if (null != bean) {
+                return bean;
+            }
+            // 2. 实例化：通过构造函数创建对象
             bean = createBeanInstance(beanDefinition, beanName, args);
-            // 2. 属性填充：设置属性值（依赖注入 DI）
+            // 3. 属性填充：设置属性值（依赖注入 DI）
             applyPropertyValues(beanName, bean, beanDefinition);
-            // 3. 初始化：执行初始化逻辑 + 前后置处理器
+            // 4. 初始化：执行初始化逻辑 + 前后置处理器
             // 执行 Bean 的初始化方法和 BeanPostProcessor 的前置和后置处理方法
             bean = initializeBean(beanName, bean, beanDefinition);
         } catch (Exception e) {
             throw new BeansException("Instantiation of bean failed", e);
         }
 
-        // 4. 注册可销毁的 Bean
+        // 5. 注册可销毁的 Bean
         // 注册实现了 DisposableBean 接口的 Bean 对象
         registerDisposableBeanIfNecessary(beanName, bean, beanDefinition);
 
         // 判断 SCOPE_SINGLETON、SCOPE_PROTOTYPE
         if (beanDefinition.isSingleton()) {
-            // 5. 将创建好的单例 Bean 添加到单例池
+            // 6. 将创建好的单例 Bean 添加到单例池
             registerSingleton(beanName, bean);
         }
-        // 6. 返回最终的 Bean
+        // 7. 返回最终的 Bean
         return bean;
+    }
+
+    protected Object resolveBeforeInstantiation(String beanName, BeanDefinition beanDefinition) {
+        Object bean = applyBeanPostProcessorsBeforeInstantiation(beanDefinition.getBeanClass(), beanName);
+        if (null != bean) {
+            bean = applyBeanPostProcessorsAfterInitialization(bean, beanName);
+        }
+        return bean;
+    }
+
+    protected Object applyBeanPostProcessorsBeforeInstantiation(Class<?> beanClass, String beanName) {
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
+                Object result = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessBeforeInstantiation(beanClass, beanName);
+                if (null != result) return result;
+            }
+        }
+        return null;
     }
 
     /**
