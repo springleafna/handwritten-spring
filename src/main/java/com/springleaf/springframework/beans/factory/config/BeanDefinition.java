@@ -3,30 +3,35 @@ package com.springleaf.springframework.beans.factory.config;
 import com.springleaf.springframework.beans.PropertyValues;
 
 /**
- * 表示一个“Bean 的定义信息”，即描述一个 Java 对象（Bean）应该如何被创建和配置。
+ * 表示一个“Bean 的定义信息”，
+ * 包括属性、构造方法参数、依赖的 Bean 名称及是否单例、延迟加载等
+ * 即描述一个 Java 对象（Bean）应该如何被创建和配置。
  */
 public class BeanDefinition {
 
+    // 单例、原型标识符
     String SCOPE_SINGLETON = ConfigurableBeanFactory.SCOPE_SINGLETON;
-
     String SCOPE_PROTOTYPE = ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
-    // 要实例化的类的 Class 对象（比如 UserService.class）
+    // 要实例化的 bean 的 Class 对象（比如 UserService.class）
     private Class beanClass;
 
-    // 一个或多个<property name="xxx" value="yyy"/>
+    // bean 的属性一个或多个<property name="xxx" value="yyy"/>
     private PropertyValues propertyValues;
 
-    // init-method="initDataMethod"
+    // bean 的初始化方法 init-method="initDataMethod"
     private String initMethodName;
 
-    // destroy-method="destroyDataMethod"
+    // bean 的销毁方法 destroy-method="destroyDataMethod"
     private String destroyMethodName;
 
+    // bean 的作用域
     private String scope = SCOPE_SINGLETON;
 
+    // bean 是否为单例
     private boolean singleton = true;
 
+    // bean 是否为原型
     private boolean prototype = false;
 
     public BeanDefinition(Class beanClass) {
