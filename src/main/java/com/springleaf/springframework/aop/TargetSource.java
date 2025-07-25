@@ -1,5 +1,7 @@
 package com.springleaf.springframework.aop;
 
+import com.springleaf.springframework.util.ClassUtils;
+
 /**
  * 被代理的目标对象
  */
@@ -12,11 +14,25 @@ public class TargetSource {
     }
 
     /**
-     * 返回此 {@link TargetSource} 返回的目标类型。
-     * 可以返回 null，尽管 TargetSource 的某些用法可能只适用于预定的目标类。
+     * 获取目标对象实现的所有接口。
+     * 举例：
+     * 原始类：
+     * class UserServiceImpl implements UserService, InitializingBean {
+     *     // 实现代码
+     * }
+     * CGLIB代理后 -> 【代理类】 extends UserServiceImpl
+     * 但我们需要获取UserServiceImpl实现的接口
+     * 结果返回：[UserService.class, InitializingBean.class]
      */
-    public Class<?>[] getTargetClass(){
-        return this.target.getClass().getInterfaces();
+    public Class<?>[] getTargetClass() {
+        // 1. 获取目标对象的实际运行时类型
+        Class<?> clazz = this.target.getClass();
+        // 因为这个 target 可能是 JDK代理 创建也可能是 CGlib创建，所以需要进行判断
+        // 2. 判断是否为CGLIB代理类，如果是则获取其父类（原始类）
+        // CGLIB代理特点：代理类继承自目标类，所以需要获取父类才是原始类
+        clazz = ClassUtils.isCglibProxyClass(clazz) ? clazz.getSuperclass() : clazz;
+        // 3. 返回该类实现的所有接口
+        return clazz.getInterfaces();
     }
 
     /**

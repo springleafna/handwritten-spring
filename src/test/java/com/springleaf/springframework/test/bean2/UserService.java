@@ -1,10 +1,19 @@
-package com.springleaf.springframework.test.bean;
+package com.springleaf.springframework.test.bean2;
+
+import com.springleaf.springframework.beans.factory.annotation.Autowired;
+import com.springleaf.springframework.beans.factory.annotation.Value;
+import com.springleaf.springframework.stereotype.Component;
 
 import java.util.Random;
 
+@Component
 public class UserService implements IUserService {
 
+    @Value("${token}")
     private String token;
+
+    @Autowired
+    private UserDao userDao;
 
     public String queryUserInfo() {
         try {
@@ -12,7 +21,7 @@ public class UserService implements IUserService {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return "小叶，100001，深圳，" + token;
+        return userDao.queryUserName("10001") + token;
     }
 
     public String register(String userName) {
