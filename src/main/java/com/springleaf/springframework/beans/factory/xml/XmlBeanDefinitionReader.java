@@ -74,6 +74,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
         Element root = document.getRootElement();
 
         // 解析 context:component-scan 标签，扫描包中的类并提取相关信息，用于组装 BeanDefinition
+        // spring就会去自动扫描base-package对应的路径或者该路径的子包下面的java文件，如果扫描到文件中带有@Component等相关注解的类，则把这些类注册为bean
         Element componentScan = root.element("component-scan");
         if (null != componentScan) {
             String scanPath = componentScan.attributeValue("base-package");
@@ -83,6 +84,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
             scanPackage(scanPath);
         }
 
+        // 将所有的<bean /> 注册为 BeanDefinition，并注册到 BeanDefinition 容器中
         List<Element> beanList = root.elements("bean");
         for (Element bean : beanList) {
 
@@ -134,6 +136,9 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
         }
     }
 
+    /**
+     * 扫描包路径下的包含@Component或@Scope注解的类，配置 Bean 的作用域和类名，注册为 Bean
+     */
     private void scanPackage(String scanPath) {
         String[] basePackages = StrUtil.splitToArray(scanPath, ',');
         ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(getRegistry());

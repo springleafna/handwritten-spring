@@ -24,7 +24,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
 
     @Override
     public void refresh() throws BeansException {
-        // 1. 创建 BeanFactory，并加载 BeanDefinition
+        // 1. 创建 BeanFactory，并从配置文件中加载 所有的BeanDefinition
         refreshBeanFactory();
 
         // 2. 获取 BeanFactory
@@ -36,12 +36,12 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         // 4. 在 Bean 实例化之前，执行 BeanFactoryPostProcessor
         invokeBeanFactoryPostProcessors(beanFactory);
 
-        // 5. BeanPostProcessor 需要提前于其他 Bean 对象实例化之前执行注册操作
+        // 5. 在 Bean 实例化之前注册 BeanPostProcessor
         registerBeanPostProcessors(beanFactory);
 
         // 6. 初始化事件发布者
-        // 即实例化SimpleApplicationEventMulticaster，这样上下文就具备了SimpleApplicationEventMulticaster中定义的事件发布功能，
-        // 并将实例化Bean对象applicationEventMulticaster 存入单例Bean对象容器singletonObjects，以供其他方法使用
+        // 即实例化 SimpleApplicationEventMulticaster，这样上下文就具备了 SimpleApplicationEventMulticaster 中定义的事件发布功能，
+        // 并将实例化 Bean 对象 applicationEventMulticaster 存入单例 Bean 对象容器 singletonObjects，以供其他方法使用
         initApplicationEventMulticaster();
 
         // 7. 注册事件监听器
@@ -56,8 +56,14 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         finishRefresh();
     }
 
+    /**
+     * 创建 BeanFactory，并加载配置文件注册 BeanDefinition
+     */
     protected abstract void refreshBeanFactory() throws BeansException;
 
+    /**
+     * 获取创建好的 DefaultListableBeanFactory
+     */
     protected abstract ConfigurableListableBeanFactory getBeanFactory();
 
     private void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
