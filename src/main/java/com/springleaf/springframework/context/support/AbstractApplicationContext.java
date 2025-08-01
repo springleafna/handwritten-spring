@@ -49,7 +49,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         // 调用applicationEventMulticaster.addApplicationListener(listener)将监听器Bean对象存入监听器池子中
         registerListeners();
 
-        // 8. 提前实例化单例Bean对象
+        // 核心 8. 提前实例化单例Bean对象（调用getBean()触发创建）
         beanFactory.preInstantiateSingletons();
 
         // 9. 发布【容器刷新完成】事件

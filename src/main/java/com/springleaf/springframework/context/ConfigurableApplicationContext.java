@@ -6,6 +6,13 @@ public interface ConfigurableApplicationContext extends ApplicationContext {
 
     /**
      * 刷新容器
+     * refresh() 方法的主要作用包括：
+     * 1. 加载或刷新配置元数据（如 XML、注解、Java 配置类等）。
+     * 2. 解析 Bean 定义（BeanDefinition）并注册到容器中。
+     * 3. 实例化非懒加载的单例 Bean。
+     * 4. 调用各种生命周期回调和后处理器（如 BeanPostProcessor、BeanFactoryPostProcessor）。
+     * 5. 准备上下文环境，使其进入可用状态。
+     * 调用 refresh() 后，Spring 容器就完成了初始化，可以正常使用 getBean() 获取 Bean 实例。
      */
     void refresh() throws BeansException;
 

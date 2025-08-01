@@ -15,20 +15,32 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
     private InstantiationStrategy instantiationStrategy = new CglibSubclassingInstantiationStrategy();
 
+    @Override
+    protected Object createBean(String beanName, BeanDefinition beanDefinition, Object[] args) throws BeansException {
+        // 判断是否返回代理 Bean 对象
+        Object bean = resolveBeforeInstantiation(beanName, beanDefinition);
+        if (null != bean) {
+            return bean;
+        }
+
+        return doCreateBean(beanName, beanDefinition, args);
+    }
+
     /**
      * 根据 BeanDefinition 创建一个完整的、初始化好的 Bean 实例，并将其放入单例池中，供后续使用。
      */
-    @Override
-    protected Object createBean(String beanName, BeanDefinition beanDefinition, Object[] args) throws BeansException {
+    protected Object doCreateBean(String beanName, BeanDefinition beanDefinition, Object[] args) throws BeansException {
         Object bean = null;
         try {
-            // 1. 判断是否返回代理 Bean 对象
-            bean = resolveBeforeInstantiation(beanName, beanDefinition);
-            if (null != bean) {
-                return bean;
-            }
-            // 2. 实例化：通过构造函数创建对象
+            // 1. 实例化 Bean
             bean = createBeanInstance(beanDefinition, beanName, args);
+
+            // 2. 处理循环依赖，将实例化后的Bean对象提前放入缓存中暴露出来
+            if (beanDefinition.isSingleton()) {
+                Object finalBean = bean;
+                addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, beanDefinition, finalBean));
+            }
+
             // 3. 实例化后判断
             boolean continueWithPropertyPopulation = applyBeanPostProcessorsAfterInstantiation(beanName, bean);
             if (!continueWithPropertyPopulation) {
@@ -50,12 +62,26 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         registerDisposableBeanIfNecessary(beanName, bean, beanDefinition);
 
         // 判断 SCOPE_SINGLETON、SCOPE_PROTOTYPE
+        Object exposedObject = bean;
         if (beanDefinition.isSingleton()) {
+            // 获取代理对象
+            exposedObject = getSingleton(beanName);
             // 6. 将创建好的单例 Bean 添加到单例池
-            registerSingleton(beanName, bean);
+            registerSingleton(beanName, exposedObject);
         }
         // 7. 返回最终的 Bean
-        return bean;
+        return exposedObject;
+    }
+
+    protected Object getEarlyBeanReference(String beanName, BeanDefinition beanDefinition, Object bean) {
+        Object exposedObject = bean;
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
+                exposedObject = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).getEarlyBeanReference(exposedObject, beanName);
+                if (null == exposedObject) return exposedObject;
+            }
+        }
+        return exposedObject;
     }
 
     /**

@@ -2,8 +2,10 @@ package com.springleaf.springframework.beans.factory.support;
 
 import com.springleaf.springframework.beans.BeansException;
 import com.springleaf.springframework.beans.factory.DisposableBean;
+import com.springleaf.springframework.beans.factory.ObjectFactory;
 import com.springleaf.springframework.beans.factory.config.SingletonBeanRegistry;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -20,8 +22,20 @@ public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
      * 保存单例Bean的容器
      * key：beanName
      * value：单例对象
+     * 一级缓存：存放普通对象
      */
     private Map<String, Object> singletonObjects = new ConcurrentHashMap<>();
+
+    /**
+     * 二级缓存：存放提前暴露的单例对象（提前注册的单例），没有完全实例化的对象
+     */
+    protected final Map<String, Object> earlySingletonObjects = new HashMap<>();
+
+    /**
+     * 三级缓存：存放单例工厂对象，用于获取延迟加载的单例对象
+     */
+    private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>();
+
 
     /**
      * 为了在容器关闭时，能够自动调用 Bean 的销毁方法（如释放数据库连接、关闭线程池等），防止资源泄漏。
@@ -33,11 +47,34 @@ public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
 
     @Override
     public Object getSingleton(String beanName) {
-        return singletonObjects.get(beanName);
+        Object singletonObject = singletonObjects.get(beanName);
+        if (null == singletonObject) {
+            singletonObject = earlySingletonObjects.get(beanName);
+            // 判断二级缓存中是否有对象，这个对象就是代理对象，因为只有代理对象才会放到三级缓存中
+            if (null == singletonObject) {
+                ObjectFactory<?> singletonFactory = singletonFactories.get(beanName);
+                if (singletonFactory != null) {
+                    singletonObject = singletonFactory.getObject();
+                    // 把三级缓存中的代理对象中的真实对象获取出来，放入二级缓存中
+                    earlySingletonObjects.put(beanName, singletonObject);
+                    singletonFactories.remove(beanName);
+                }
+            }
+        }
+        return singletonObject;
     }
 
     public void registerSingleton(String beanName, Object singletonObject) {
         singletonObjects.put(beanName, singletonObject);
+        earlySingletonObjects.remove(beanName);
+        singletonFactories.remove(beanName);
+    }
+
+    protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory){
+        if (!this.singletonObjects.containsKey(beanName)) {
+            this.singletonFactories.put(beanName, singletonFactory);
+            this.earlySingletonObjects.remove(beanName);
+        }
     }
 
     public void registerDisposableBean(String beanName, DisposableBean bean) {
