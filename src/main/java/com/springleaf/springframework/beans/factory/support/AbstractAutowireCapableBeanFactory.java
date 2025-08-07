@@ -2,11 +2,13 @@ package com.springleaf.springframework.beans.factory.support;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.TypeUtil;
 import com.springleaf.springframework.beans.BeansException;
 import com.springleaf.springframework.beans.PropertyValue;
 import com.springleaf.springframework.beans.PropertyValues;
 import com.springleaf.springframework.beans.factory.*;
 import com.springleaf.springframework.beans.factory.config.*;
+import com.springleaf.springframework.core.convert.ConversionService;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -178,18 +180,28 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
                 String name = propertyValue.getName();
                 Object value = propertyValue.getValue();
 
-                // 如果属性值是一个 BeanReference（即引用了另一个 Bean），说明这是一个依赖。
-                // 通过 getBean() 方法从容器中获取该 Bean 的实例（可能触发该 Bean 的创建）。
                 if (value instanceof BeanReference) {
                     // A 依赖 B，获取 B 的实例化
                     BeanReference beanReference = (BeanReference) value;
                     value = getBean(beanReference.getBeanName());
                 }
-                // 属性填充，通过反射将属性值注入到 Bean 的字段中 。
+                // 类型转换
+                else {
+                    Class<?> sourceType = value.getClass();
+                    Class<?> targetType = (Class<?>) TypeUtil.getFieldType(bean.getClass(), name);
+                    ConversionService conversionService = getConversionService();
+                    if (conversionService != null) {
+                        if (conversionService.canConvert(sourceType, targetType)) {
+                            value = conversionService.convert(value, targetType);
+                        }
+                    }
+                }
+
+                // 反射设置属性填充
                 BeanUtil.setFieldValue(bean, name, value);
             }
         } catch (Exception e) {
-            throw new BeansException("Error setting property values：" + beanName);
+            throw new BeansException("Error setting property values：" + beanName + " message：" + e);
         }
     }
 

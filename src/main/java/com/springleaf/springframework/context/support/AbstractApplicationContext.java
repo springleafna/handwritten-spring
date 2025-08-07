@@ -11,6 +11,7 @@ import com.springleaf.springframework.context.event.ApplicationEventMulticaster;
 import com.springleaf.springframework.context.event.ContextClosedEvent;
 import com.springleaf.springframework.context.event.ContextRefreshedEvent;
 import com.springleaf.springframework.context.event.SimpleApplicationEventMulticaster;
+import com.springleaf.springframework.core.convert.ConversionService;
 import com.springleaf.springframework.core.io.DefaultResourceLoader;
 
 import java.util.Collection;
@@ -49,11 +50,27 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         // 调用applicationEventMulticaster.addApplicationListener(listener)将监听器Bean对象存入监听器池子中
         registerListeners();
 
-        // 核心 8. 提前实例化单例Bean对象（调用getBean()触发创建）
-        beanFactory.preInstantiateSingletons();
+        // 核心 8. 设置类型转换器、提前实例化单例Bean对象（调用getBean()触发创建）
+        finishBeanFactoryInitialization(beanFactory);
 
         // 9. 发布【容器刷新完成】事件
         finishRefresh();
+    }
+
+    /**
+     * 设置类型转换器、提前实例化单例Bean对象
+     */
+    protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
+        // 设置类型转换器
+        if (beanFactory.containsBean("conversionService")) {
+            Object conversionService = beanFactory.getBean("conversionService");
+            if (conversionService instanceof ConversionService) {
+                beanFactory.setConversionService((ConversionService) conversionService);
+            }
+        }
+
+        // 提前实例化单例Bean对象
+        beanFactory.preInstantiateSingletons();
     }
 
     /**
@@ -131,6 +148,11 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
     @Override
     public <T> T getBean(Class<T> requiredType) throws BeansException {
         return getBeanFactory().getBean(requiredType);
+    }
+
+    @Override
+    public boolean containsBean(String name) {
+        return getBeanFactory().containsBean(name);
     }
 
     /**
